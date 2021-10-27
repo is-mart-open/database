@@ -6,6 +6,7 @@ authors = ["greenstar1151 <39073901+greenstar1151@users.noreply.github.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
+requests = "^2.26.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
