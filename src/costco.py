@@ -3,6 +3,7 @@ import re
 from pprint import pprint
 from typing import Tuple, TypedDict, Union
 
+from lunardate import LunarDate
 import requests
 from bs4 import BeautifulSoup
 from dateutil import relativedelta
@@ -23,7 +24,7 @@ class MartData(TypedDict):
 
 # define common info across all mart data
 KST = timezone('Asia/Seoul')
-data_base_date = datetime.datetime.now(KST)
+data_base_date = KST.localize(datetime.datetime(2021, 9, 20)) #datetime.datetime.now(KST)
 data_mart_type = 'costco'
 
 # define regex for holiday parsing
@@ -60,9 +61,31 @@ def parse_open_time(text_open_time: str,
 def parse_next_holiday(text_holiday: str, 
                        data_base_date: datetime.datetime) \
                        -> datetime.datetime:
+    data_base_date = data_base_date.replace(hour=0, minute=0, second=0, microsecond=0)
     date_thismonth = data_base_date.replace(day=1)
     date_nextmonth = date_thismonth + relativedelta.relativedelta(months=1)
-    holiday_list = []
+    date_thisyear = data_base_date.replace(month=1, day=1)
+    date_nextyear = date_thisyear + relativedelta.relativedelta(years=1)
+    holiday_list = [
+        date_thisyear,                                          # 올해 1월 1일
+        date_nextyear,                                          # 내년 1월 1일
+        KST.localize(datetime.datetime.combine(
+            LunarDate(date_thisyear.year, 1, 1).toSolarDate(),  # 올해 설날
+            datetime.time()
+        )),
+        KST.localize(datetime.datetime.combine(
+            LunarDate(date_nextyear.year, 1, 1).toSolarDate(),  # 내년 설날
+            datetime.time()
+        )),
+        KST.localize(datetime.datetime.combine(
+            LunarDate(date_thisyear.year, 8, 15).toSolarDate(), # 올해 추석
+            datetime.time()
+        )),
+        KST.localize(datetime.datetime.combine(
+            LunarDate(date_nextyear.year, 8, 15).toSolarDate(), # 내년 추석
+            datetime.time()
+        )),
+    ]
     found = regex_date_type1.findall(text_holiday)
     if found: # type1: 매월 _째, _째 _요일 의무 휴무
         found = found[0]
@@ -110,8 +133,8 @@ def parse_next_holiday(text_holiday: str,
 
     holiday_list.append(data_base_date)
     holiday_list.sort()
-    next_holiday_index = min(holiday_list.index(data_base_date) + 1, len(holiday_list) - 1)
-    #pprint(holiday_list)
+    next_holiday_index = holiday_list.index(data_base_date) + 1 # 다음 휴무일이 존재할 것을 전제
+    #pprint(holiday_list) # debug
     return holiday_list[next_holiday_index]
 
 

@@ -82,6 +82,14 @@ optional = false
 python-versions = ">=3.5"
 
 [[package]]
+name = "lunardate"
+version = "0.2.0"
+description = "A Chinese Calendar Library in Pure Python"
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "more-itertools"
 version = "8.10.0"
 description = "More routines for operating on iterables, beyond itertools"
@@ -229,7 +237,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "62866fae4d76c2af5e705dd571f8d7169135ba31d047af26e9e0635091686085"
+content-hash = "955b45a0cf98a1e4e4e6cf2d3b2a21bed8411845866df79c90d24f7d0677298e"
 
 [metadata.files]
 atomicwrites = [
@@ -262,6 +270,13 @@ colorama = [
 idna = [
     {file = "idna-3.3-py3-none-any.whl", hash = "sha256:84d9dd047ffa80596e0f246e2eab0b391788b0503584e8945f2368256d2735ff"},
     {file = "idna-3.3.tar.gz", hash = "sha256:9d643ff0a55b762d5cdb124b8eaa99c66322e2157b69160bc32796e824360e6d"},
+]
+lunardate = [
+    {file = "lunardate-0.2.0-py2-none-any.whl", hash = "sha256:838e84b95d185a12f8bd0c5bdd74864be52d55436bed56927fdc91f4d21ad6b6"},
+    {file = "lunardate-0.2.0-py2.7.egg", hash = "sha256:f0bb5938d7c7f363a26f599a3c27b7f5560edd8b689ef3c5865ec401dfc7ed88"},
+    {file = "lunardate-0.2.0-py3-none-any.whl", hash = "sha256:5619d625809ebcaa673c4e321cd1ea82e649e9bb47e42e6479fe15bbc2b5bffe"},
+    {file = "lunardate-0.2.0-py3.7.egg", hash = "sha256:dd7d7c7a61dbb843662eb8b04da2f0c8bb1e9e2c1dd8acced6ebcb21151eb19c"},
+    {file = "lunardate-0.2.0.tar.gz", hash = "sha256:6c9c96d9f01522a10ab35df1a9b48707ae64a086f13fd34498b43f465918cc6f"},
 ]
 more-itertools = [
     {file = "more-itertools-8.10.0.tar.gz", hash = "sha256:1debcabeb1df793814859d64a81ad7cb10504c24349368ccf214c664c474f41f"},
