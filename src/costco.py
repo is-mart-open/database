@@ -61,6 +61,7 @@ def parse_next_holiday(text_holiday: str,
                        data_base_date: datetime.datetime) \
                        -> datetime.datetime:
     date_thismonth = data_base_date.replace(day=1)
+    date_nextmonth = date_thismonth + relativedelta.relativedelta(months=1)
     holiday_list = []
     found = regex_date_type1.findall(text_holiday)
     if found: # type1: 매월 _째, _째 _요일 의무 휴무
@@ -72,6 +73,14 @@ def parse_next_holiday(text_holiday: str,
                 weekday = date_str_table[day](date_str_table[week_former])
             ),
             date_thismonth + 
+            relativedelta.relativedelta(
+                weekday = date_str_table[day](date_str_table[week_latter])
+            ),
+            date_nextmonth + 
+            relativedelta.relativedelta(
+                weekday = date_str_table[day](date_str_table[week_former])
+            ),
+            date_nextmonth + 
             relativedelta.relativedelta(
                 weekday = date_str_table[day](date_str_table[week_latter])
             )
@@ -88,12 +97,21 @@ def parse_next_holiday(text_holiday: str,
             date_thismonth + 
             relativedelta.relativedelta(
                 weekday = date_str_table[day_latter](date_str_table[week_latter])
+            ),
+            date_nextmonth + 
+            relativedelta.relativedelta(
+                weekday = date_str_table[day_former](date_str_table[week_former])
+            ),
+            date_nextmonth + 
+            relativedelta.relativedelta(
+                weekday = date_str_table[day_latter](date_str_table[week_latter])
             )
         ]
 
     holiday_list.append(data_base_date)
     holiday_list.sort()
     next_holiday_index = min(holiday_list.index(data_base_date) + 1, len(holiday_list) - 1)
+    #pprint(holiday_list)
     return holiday_list[next_holiday_index]
 
 
