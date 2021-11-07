@@ -24,7 +24,7 @@ class MartData(TypedDict):
 
 # define common info across all mart data
 KST = timezone('Asia/Seoul')
-data_base_date = KST.localize(datetime.datetime(2021, 9, 20)) #datetime.datetime.now(KST)
+data_base_date = datetime.datetime.now(KST)
 data_mart_type = 'costco'
 
 # define regex for holiday parsing
@@ -170,16 +170,6 @@ def main() -> None:
     
     pprint(mart_list)
 
-
-# data: MartData = {
-#     'base_date': datetime.datetime.now(KST),
-#     'mart_type': '',
-#     'mart_name': 'None',
-#     'loc': (0, 0),
-#     'start_time': temp,
-#     'end_time': temp,
-#     'next_holiday': temp
-# }
 
 
 if __name__ == '__main__':
