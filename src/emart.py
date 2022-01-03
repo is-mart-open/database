@@ -1,14 +1,10 @@
 import datetime
 import os
-import re
 from pprint import pprint
 from typing import Tuple, Union
 
 import requests
-from bs4 import BeautifulSoup
-from dateutil import relativedelta
 from dotenv import load_dotenv
-from lunardate import LunarDate
 from pytz import timezone
 
 import database_handler
