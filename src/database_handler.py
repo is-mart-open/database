@@ -29,7 +29,7 @@ def __generate_martdata_insert_query(mart_data: MartData) -> Tuple[str, dict]:
         'loc': f"POINT({mart_data['longitude']} {mart_data['latitude']})",
         'start_time': mart_data['start_time'].strftime('%Y-%m-%d %H:%M:%S %Z'),
         'end_time': mart_data['end_time'].strftime('%Y-%m-%d %H:%M:%S %Z'),
-        'next_holiday': mart_data['next_holiday'].strftime('%Y-%m-%d %H:%M:%S %Z')
+        'next_holiday': mart_data['next_holiday'].strftime('%Y-%m-%d %H:%M:%S %Z') if mart_data['next_holiday'] is not None else None
     }
     # print(query_data) # debug
     return query_str, query_data
