@@ -17,7 +17,8 @@ class MartData(TypedDict):
     base_date: datetime.datetime
     mart_type: str
     mart_name: str
-    loc: Tuple[float, float]
+    longitude: float
+    latitude: float
     start_time: datetime.datetime
     end_time: datetime.datetime
     next_holiday: datetime.datetime
@@ -161,7 +162,8 @@ def main() -> None:
             'base_date': data_base_date,
             'mart_type': data_mart_type,
             'mart_name': data_mart_name,
-            'loc': data_loc,
+            'longitude': float(mart_data['longitude']),
+            'latitude': float(mart_data['latitude']),
             'start_time': data_start_time,
             'end_time': data_end_time,
             'next_holiday': data_next_holiday
