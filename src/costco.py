@@ -12,8 +12,7 @@ from lunardate import LunarDate
 from pytz import timezone
 
 import database_handler
-from common_data import MartData
-from config import BASE_URL
+from common_data import MartData, BASE_URL
 
 
 # load enviroment variables (if exist)
