@@ -16,7 +16,7 @@ if os.path.exists(os.path.join(PROJECT_ROOT, '.env')):
 
 def __generate_martdata_insert_query(mart_data: MartData) -> Tuple[str, dict]:
     query_str = '''
-        INSERT INTO mart_new (base_date, mart_type, mart_name, loc, start_time, end_time, next_holiday, is_holiday)
+        INSERT INTO mart (base_date, mart_type, mart_name, loc, start_time, end_time, next_holiday, is_holiday)
         VALUES (%(base_date)s::timestamptz, %(mart_type)s::varchar, %(mart_name)s::varchar, ST_GeomFromText(%(loc)s, 4326), %(start_time)s::timestamptz, %(end_time)s::timestamptz, %(next_holiday)s::timestamptz, %(is_holiday)s::boolean)
         ON CONFLICT (mart_name) 
         DO 
