@@ -1,4 +1,5 @@
 import datetime
+import os
 import re
 from pprint import pprint
 from typing import Tuple, TypedDict, Union
@@ -7,12 +8,18 @@ import psycopg
 import requests
 from bs4 import BeautifulSoup
 from dateutil import relativedelta
+from dotenv import load_dotenv
 from lunardate import LunarDate
 from pytz import timezone
 from shapely.geometry import Point
 
-from config import BASE_URL, DATABASE_CONNECTION_URI
+from config import BASE_URL
 
+
+# load enviroment variables (if exist)
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+if os.path.exists(os.path.join(PROJECT_ROOT, '.env')):
+    load_dotenv(os.path.join(PROJECT_ROOT, '.env'))
 
 # define data structure for mart data
 class MartData(TypedDict):
@@ -194,7 +201,8 @@ def main() -> None:
     
     #pprint(mart_list) # debug
     
-    with psycopg.connect(DATABASE_CONNECTION_URI) as conn:
+    assert os.environ.get('DATABASE_URL') is not None
+    with psycopg.connect(os.environ.get('DATABASE_URL')) as conn:
         from psycopg.types.shapely import register_shapely
         info = psycopg.types.TypeInfo.fetch(conn, 'geometry')
         register_shapely(info, conn)
