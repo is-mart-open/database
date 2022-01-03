@@ -36,22 +36,28 @@ def parse_open_time(text_start_time: str,
 
 def parse_next_holiday(text_holiday_list: list[str], 
                        data_base_date: datetime.datetime) \
-                       -> Union[datetime.datetime, None]:
-    holiday_list = [data_base_date]
+                       -> Tuple[Union[datetime.datetime, None], bool]:
+    is_holiday = False
+    data_base_date = data_base_date.replace(hour=0, minute=0, second=0, microsecond=0)
+    holiday_list = []
     for text_holiday in filter(lambda x: len(x) > 0, text_holiday_list):
         time_holiday = datetime.datetime.strptime(text_holiday.strip(), '%Y%m%d')
         time_holiday = KST.localize(time_holiday)
         holiday_list.append(time_holiday)
 
+    if data_base_date in set(holiday_list):
+        is_holiday = True
+    holiday_list.append(data_base_date)
+    holiday_list = list(set(holiday_list))
     holiday_list.sort()
     if len(holiday_list) > 1:
         next_holiday_index = holiday_list.index(data_base_date) + 1
         if next_holiday_index < len(holiday_list):
-            return holiday_list[next_holiday_index]
+            return holiday_list[next_holiday_index], is_holiday
         else:
-            return None
+            return None, False
     else:
-        return None
+        return None, False
 
 
 def emart() -> None:
@@ -77,7 +83,7 @@ def emart() -> None:
             str(mart_data['CLOSE_SHOPPING_TIME']), 
             data_base_date
         )
-        data_next_holiday = parse_next_holiday(
+        data_next_holiday, data_is_holiday = parse_next_holiday(
             [
                 str(mart_data['HOLIDAY_DAY1_YYYYMMDD']),
                 str(mart_data['HOLIDAY_DAY2_YYYYMMDD']),
@@ -94,7 +100,8 @@ def emart() -> None:
             'latitude': data_latitude,
             'start_time': data_start_time,
             'end_time': data_end_time,
-            'next_holiday': data_next_holiday
+            'next_holiday': data_next_holiday,
+            'is_holiday': data_is_holiday
         }
 
         mart_list.append(data)

@@ -12,6 +12,7 @@ class MartData(TypedDict):
     start_time: datetime.datetime
     end_time: datetime.datetime
     next_holiday: Union[datetime.datetime, None]
+    is_holiday: bool
 
 BASE_URL = {
     'emart': 'https://store.emart.com/branch/searchList.do',

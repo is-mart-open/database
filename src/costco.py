@@ -59,7 +59,8 @@ def parse_open_time(text_open_time: str,
 
 def parse_next_holiday(text_holiday: str, 
                        data_base_date: datetime.datetime) \
-                       -> datetime.datetime:
+                       -> Tuple[datetime.datetime, bool]:
+    is_holiday = False
     data_base_date = data_base_date.replace(hour=0, minute=0, second=0, microsecond=0)
     date_thismonth = data_base_date.replace(day=1)
     date_nextmonth = date_thismonth + relativedelta.relativedelta(months=1)
@@ -130,11 +131,15 @@ def parse_next_holiday(text_holiday: str,
             )
         ]
 
+    if data_base_date in set(holiday_list):
+        is_holiday = True
+    
     holiday_list.append(data_base_date)
+    holiday_list = list(set(holiday_list))
     holiday_list.sort()
     next_holiday_index = holiday_list.index(data_base_date) + 1 # 다음 휴무일이 존재할 것을 전제
     #pprint(holiday_list) # debug
-    return holiday_list[next_holiday_index]
+    return holiday_list[next_holiday_index], is_holiday
 
 
 def costco() -> None:
@@ -153,7 +158,7 @@ def costco() -> None:
         data_start_time, data_end_time = parse_open_time(text_open_time, data_base_date)
         
         text_holiday = str(html_ptag_list[-1].span.text)
-        data_next_holiday = parse_next_holiday(text_holiday, data_base_date)
+        data_next_holiday, data_is_holiday = parse_next_holiday(text_holiday, data_base_date)
 
         data: MartData = {
             'base_date': data_base_date,
@@ -163,7 +168,8 @@ def costco() -> None:
             'latitude': float(mart_data['latitude']),
             'start_time': data_start_time,
             'end_time': data_end_time,
-            'next_holiday': data_next_holiday
+            'next_holiday': data_next_holiday,
+            'is_holiday': data_is_holiday
         }
         mart_list.append(data)
     
