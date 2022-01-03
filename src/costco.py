@@ -3,13 +3,15 @@ import re
 from pprint import pprint
 from typing import Tuple, TypedDict, Union
 
-from lunardate import LunarDate
+import psycopg
 import requests
 from bs4 import BeautifulSoup
 from dateutil import relativedelta
+from lunardate import LunarDate
 from pytz import timezone
+from shapely.geometry import Point
 
-from config import BASE_URL
+from config import BASE_URL, DATABASE_CONNECTION_URI
 
 
 # define data structure for mart data
@@ -139,6 +141,27 @@ def parse_next_holiday(text_holiday: str,
     return holiday_list[next_holiday_index]
 
 
+def generate_martdata_insert_query(mart_data: MartData) -> Tuple[str, dict]:
+    query_str = '''
+        INSERT INTO mart_new (base_date, mart_type, mart_name, loc, start_time, end_time, next_holiday)
+        VALUES (%(base_date)s::timestamptz, %(mart_type)s::varchar, %(mart_name)s::varchar, ST_GeomFromText(%(loc)s, 4326), %(start_time)s::timestamptz, %(end_time)s::timestamptz, %(next_holiday)s::timestamptz)
+        ON CONFLICT (mart_name) 
+        DO 
+        UPDATE SET base_date=%(base_date)s::timestamptz, mart_type=%(mart_type)s::varchar, loc=ST_GeomFromText(%(loc)s, 4326), start_time=%(start_time)s::timestamptz, end_time=%(end_time)s::timestamptz, next_holiday=%(next_holiday)s::timestamptz;
+    '''
+    query_data = {
+        'base_date': mart_data['base_date'].strftime('%Y-%m-%d %H:%M:%S %Z'),
+        'mart_type': mart_data['mart_type'],
+        'mart_name': mart_data['mart_name'],
+        'loc': f"POINT({mart_data['longitude']} {mart_data['latitude']})",
+        'start_time': mart_data['start_time'].strftime('%Y-%m-%d %H:%M:%S %Z'),
+        'end_time': mart_data['end_time'].strftime('%Y-%m-%d %H:%M:%S %Z'),
+        'next_holiday': mart_data['next_holiday'].strftime('%Y-%m-%d %H:%M:%S %Z')
+    }
+    # print(query_data) # debug
+    return query_str, query_data
+
+
 def main() -> None:
     response = requests.get(BASE_URL['costco'], data={})
     response_dict = response.json()
@@ -146,7 +169,6 @@ def main() -> None:
     mart_list = []
     for mart_data in response_dict['data']:
         data_mart_name = str(mart_data['displayName'])
-        data_loc = (float(mart_data['latitude']), float(mart_data['longitude']))
         
         html_text = mart_data['storeContent']
         soup = BeautifulSoup(html_text, 'html.parser')
@@ -170,7 +192,18 @@ def main() -> None:
         }
         mart_list.append(data)
     
-    pprint(mart_list)
+    #pprint(mart_list) # debug
+    
+    with psycopg.connect(DATABASE_CONNECTION_URI) as conn:
+        from psycopg.types.shapely import register_shapely
+        info = psycopg.types.TypeInfo.fetch(conn, 'geometry')
+        register_shapely(info, conn)
+        with conn.cursor() as cur:
+            for mart_data in mart_list:
+                cur.execute(*generate_martdata_insert_query(mart_data))
+
+            conn.commit()
+    
 
 
 
