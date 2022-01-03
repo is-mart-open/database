@@ -161,7 +161,7 @@ def main() -> None:
         data: MartData = {
             'base_date': data_base_date,
             'mart_type': data_mart_type,
-            'mart_name': data_mart_name,
+            'mart_name': f'코스트코 {data_mart_name}',
             'longitude': float(mart_data['longitude']),
             'latitude': float(mart_data['latitude']),
             'start_time': data_start_time,
