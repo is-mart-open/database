@@ -12,7 +12,7 @@ from lunardate import LunarDate
 from pytz import timezone
 
 import database_handler
-from common_data import MartData, BASE_URL
+from common_data import MartData, BASE_URL, headers_user_agent
 
 
 # load enviroment variables (if exist)
@@ -138,7 +138,7 @@ def parse_next_holiday(text_holiday: str,
 
 
 def costco() -> None:
-    response = requests.get(BASE_URL['costco'], data={})
+    response = requests.get(BASE_URL['costco'], headers=headers_user_agent, data={})
     response_dict = response.json()
 
     mart_list = []
