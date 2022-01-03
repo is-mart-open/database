@@ -2,17 +2,17 @@ import datetime
 import os
 import re
 from pprint import pprint
-from typing import Tuple, TypedDict, Union
+from typing import Tuple
 
-import psycopg
 import requests
 from bs4 import BeautifulSoup
 from dateutil import relativedelta
 from dotenv import load_dotenv
 from lunardate import LunarDate
 from pytz import timezone
-from shapely.geometry import Point
 
+import database_handler
+from common_data import MartData
 from config import BASE_URL
 
 
@@ -20,17 +20,6 @@ from config import BASE_URL
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 if os.path.exists(os.path.join(PROJECT_ROOT, '.env')):
     load_dotenv(os.path.join(PROJECT_ROOT, '.env'))
-
-# define data structure for mart data
-class MartData(TypedDict):
-    base_date: datetime.datetime
-    mart_type: str
-    mart_name: str
-    longitude: float
-    latitude: float
-    start_time: datetime.datetime
-    end_time: datetime.datetime
-    next_holiday: datetime.datetime
 
 # define common info across all mart data
 KST = timezone('Asia/Seoul')
@@ -67,6 +56,7 @@ def parse_open_time(text_open_time: str,
     time_end = KST.localize(time_end.replace(year=data_base_date.year, month=data_base_date.month, day=data_base_date.day))
     
     return time_start, time_end
+
 
 def parse_next_holiday(text_holiday: str, 
                        data_base_date: datetime.datetime) \
@@ -148,28 +138,7 @@ def parse_next_holiday(text_holiday: str,
     return holiday_list[next_holiday_index]
 
 
-def generate_martdata_insert_query(mart_data: MartData) -> Tuple[str, dict]:
-    query_str = '''
-        INSERT INTO mart_new (base_date, mart_type, mart_name, loc, start_time, end_time, next_holiday)
-        VALUES (%(base_date)s::timestamptz, %(mart_type)s::varchar, %(mart_name)s::varchar, ST_GeomFromText(%(loc)s, 4326), %(start_time)s::timestamptz, %(end_time)s::timestamptz, %(next_holiday)s::timestamptz)
-        ON CONFLICT (mart_name) 
-        DO 
-        UPDATE SET base_date=%(base_date)s::timestamptz, mart_type=%(mart_type)s::varchar, loc=ST_GeomFromText(%(loc)s, 4326), start_time=%(start_time)s::timestamptz, end_time=%(end_time)s::timestamptz, next_holiday=%(next_holiday)s::timestamptz;
-    '''
-    query_data = {
-        'base_date': mart_data['base_date'].strftime('%Y-%m-%d %H:%M:%S %Z'),
-        'mart_type': mart_data['mart_type'],
-        'mart_name': mart_data['mart_name'],
-        'loc': f"POINT({mart_data['longitude']} {mart_data['latitude']})",
-        'start_time': mart_data['start_time'].strftime('%Y-%m-%d %H:%M:%S %Z'),
-        'end_time': mart_data['end_time'].strftime('%Y-%m-%d %H:%M:%S %Z'),
-        'next_holiday': mart_data['next_holiday'].strftime('%Y-%m-%d %H:%M:%S %Z')
-    }
-    # print(query_data) # debug
-    return query_str, query_data
-
-
-def main() -> None:
+def costco() -> None:
     response = requests.get(BASE_URL['costco'], data={})
     response_dict = response.json()
 
@@ -200,20 +169,9 @@ def main() -> None:
         mart_list.append(data)
     
     #pprint(mart_list) # debug
-    
-    assert os.environ.get('DATABASE_URL') is not None
-    with psycopg.connect(os.environ.get('DATABASE_URL')) as conn:
-        from psycopg.types.shapely import register_shapely
-        info = psycopg.types.TypeInfo.fetch(conn, 'geometry')
-        register_shapely(info, conn)
-        with conn.cursor() as cur:
-            for mart_data in mart_list:
-                cur.execute(*generate_martdata_insert_query(mart_data))
-
-            conn.commit()
-    
+    database_handler.insert(mart_list)
 
 
 
 if __name__ == '__main__':
-    main()
+    costco()
