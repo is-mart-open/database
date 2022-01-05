@@ -37,17 +37,35 @@ def insert_mart_data(mart_list: list[MartData], mart_type: str) -> None:
         DO 
         UPDATE SET base_date=%(base_date)s::timestamptz, mart_type=%(mart_type)s::varchar, loc=ST_GeomFromText(%(loc)s, 4326), start_time=%(start_time)s::timestamptz, end_time=%(end_time)s::timestamptz, next_holiday=%(next_holiday)s::timestamptz, is_holiday=%(is_holiday)s::boolean;
     '''
+    # validate mart data
     assert all([mart_type == mart['mart_type'] for mart in mart_list])
+    # save data length for later validation
+    mart_data_count = len(mart_list)
 
+    # get DATABASE_URL from env
     assert os.environ.get('DATABASE_URL') is not None
     with psycopg.connect(os.environ.get('DATABASE_URL')) as conn:
+        # set shapely support
         info = psycopg.types.TypeInfo.fetch(conn, 'geometry')
         assert info is not None
         register_shapely(info, conn)
+
+        # insert mart data
         with conn.cursor() as cur:
             mart_data_list = []
             for mart_data in mart_list:
                 mart_data_list.append(__generate_martdata_insert_query_data(mart_data))
             cur.executemany(query_str, mart_data_list)
+            conn.commit()
 
+        # validate mart data
+        with conn.cursor() as cur:
+            cur.execute(
+                '''
+                SELECT * FROM mart WHERE mart_type = %s
+                ''',
+                (mart_type,)
+            )
+            result = cur.fetchall()
+            assert mart_data_count == len(result)
             conn.commit()
