@@ -174,7 +174,7 @@ def costco() -> None:
         mart_list.append(data)
     
     #pprint(mart_list) # debug
-    database_handler.insert(mart_list)
+    database_handler.insert_mart_data(mart_list)
 
 
 

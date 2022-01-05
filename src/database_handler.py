@@ -14,14 +14,7 @@ if os.path.exists(os.path.join(PROJECT_ROOT, '.env')):
     load_dotenv(os.path.join(PROJECT_ROOT, '.env'))
 
 
-def __generate_martdata_insert_query(mart_data: MartData) -> Tuple[str, dict]:
-    query_str = '''
-        INSERT INTO mart (base_date, mart_type, mart_name, loc, start_time, end_time, next_holiday, is_holiday)
-        VALUES (%(base_date)s::timestamptz, %(mart_type)s::varchar, %(mart_name)s::varchar, ST_GeomFromText(%(loc)s, 4326), %(start_time)s::timestamptz, %(end_time)s::timestamptz, %(next_holiday)s::timestamptz, %(is_holiday)s::boolean)
-        ON CONFLICT (mart_name) 
-        DO 
-        UPDATE SET base_date=%(base_date)s::timestamptz, mart_type=%(mart_type)s::varchar, loc=ST_GeomFromText(%(loc)s, 4326), start_time=%(start_time)s::timestamptz, end_time=%(end_time)s::timestamptz, next_holiday=%(next_holiday)s::timestamptz, is_holiday=%(is_holiday)s::boolean;
-    '''
+def __generate_martdata_insert_query_data(mart_data: MartData) -> dict:
     query_data = {
         'base_date': mart_data['base_date'].strftime('%Y-%m-%d %H:%M:%S %Z'),
         'mart_type': mart_data['mart_type'],
@@ -33,17 +26,27 @@ def __generate_martdata_insert_query(mart_data: MartData) -> Tuple[str, dict]:
         'is_holiday': mart_data['is_holiday']
     }
     # print(query_data) # debug
-    return query_str, query_data
+    return query_data
 
 
-def insert(mart_list: list[MartData]) -> None:
+def insert_mart_data(mart_list: list[MartData]) -> None:
+    query_str = '''
+        INSERT INTO mart (base_date, mart_type, mart_name, loc, start_time, end_time, next_holiday, is_holiday)
+        VALUES (%(base_date)s::timestamptz, %(mart_type)s::varchar, %(mart_name)s::varchar, ST_GeomFromText(%(loc)s, 4326), %(start_time)s::timestamptz, %(end_time)s::timestamptz, %(next_holiday)s::timestamptz, %(is_holiday)s::boolean)
+        ON CONFLICT (mart_name) 
+        DO 
+        UPDATE SET base_date=%(base_date)s::timestamptz, mart_type=%(mart_type)s::varchar, loc=ST_GeomFromText(%(loc)s, 4326), start_time=%(start_time)s::timestamptz, end_time=%(end_time)s::timestamptz, next_holiday=%(next_holiday)s::timestamptz, is_holiday=%(is_holiday)s::boolean;
+    '''
+
     assert os.environ.get('DATABASE_URL') is not None
     with psycopg.connect(os.environ.get('DATABASE_URL')) as conn:
         info = psycopg.types.TypeInfo.fetch(conn, 'geometry')
         assert info is not None
         register_shapely(info, conn)
         with conn.cursor() as cur:
+            mart_data_list = []
             for mart_data in mart_list:
-                cur.execute(*__generate_martdata_insert_query(mart_data))
+                mart_data_list.append(__generate_martdata_insert_query_data(mart_data))
+            cur.executemany(query_str, mart_data_list)
 
             conn.commit()
