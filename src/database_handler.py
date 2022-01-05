@@ -69,3 +69,5 @@ def insert_mart_data(mart_list: list[MartData], mart_type: str) -> None:
             result = cur.fetchall()
             assert mart_data_count == len(result)
             conn.commit()
+
+            print(f"Inserted mart_type '{mart_type}' to DB. data count: {mart_data_count}")
