@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "is-mart-open_martDB-generator"
-version = "0.1.0"
+version = "0.1.1"
 description = ""
 authors = ["greenstar1151 <39073901+greenstar1151@users.noreply.github.com>"]
 
